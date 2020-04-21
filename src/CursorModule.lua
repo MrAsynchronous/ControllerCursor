@@ -207,7 +207,7 @@ function GamepadCursor:ShowCursor()
 
 	--Fire event and bind UpdateCursorPosition method to renderStepped
 	self.Events.CursorActivated:Fire()
-    RunService:BindToRenderStep("CursorUpdate", 4, UpdateCursorPosition)
+    RunService:BindToRenderStep("CursorUpdate", 1, UpdateCursorPosition)
 end
 
 
