@@ -193,6 +193,8 @@ end
 
 --//Shows the cursor, binds to renderStepped to allow cursor movement
 function GamepadCursor:ShowCursor()
+	isInCursorMode = true
+
     UserInputService.MouseIconEnabled = false 
     GuiService.GuiNavigationEnabled = false
     GuiService.AutoSelectGuiEnabled = false
@@ -213,6 +215,8 @@ end
 
 --//Hides the cursor, removes renderStepped bind
 function GamepadCursor:HideCursor()
+	isInCursorMode = false
+
     UserInputService.MouseIconEnabled = true
     GuiService.GuiNavigationEnabled = true
     GuiService.AutoSelectGuiEnabled = true
@@ -239,7 +243,7 @@ UserInputService.InputBegan:Connect(function(inputObject)
 
 		--Show or hide cursor depending on isInCursorMode
         if (isInCursorMode) then
-            self:ShowCursor()          
+            self:ShowCursor()     
         else
             self:HideCursor()
 		end
