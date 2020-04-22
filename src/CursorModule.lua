@@ -242,7 +242,13 @@ UserInputService.InputBegan:Connect(function(inputObject)
             self:ShowCursor()          
         else
             self:HideCursor()
-        end
+		end
+	elseif (inputObject.KeyCode == Enum.KeyCode.ButtonR3) then
+		if (isInCursorMode) then
+			isInCursorMode = false
+
+			self:HideCursor()
+		end
     end
 end)
 
