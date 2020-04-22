@@ -157,7 +157,7 @@ local function UpdateCursorPosition()
     local topUiObject
 	for _, uiObject in ipairs(uiObjects) do
 		if (uiObject and (VALID_SELECTION_TYPES[uiObject.ClassName] and uiObject.Selectable)) then
-			topUiObject = uiObject	
+			topUiObject = uiObject
 			
 			break
 		end
