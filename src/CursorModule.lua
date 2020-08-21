@@ -34,10 +34,11 @@
 --//	CONFIG	\\--
 
 local CREATE_GUI = true 							--Auto creates GUI if set to true, if false, you must change the CursorGui and Cursor variables
-	local CURSOR_ICON = "rbxassetid://4883624920"	--Image of the cursor
-	local CURSOR_SIZE = UDim2.new(0, 15, 0, 15)		--Size in offset of the cursor
+local CURSOR_ICON = "rbxassetid://4883624920"		--Image of the cursor
+local CURSOR_SIZE = UDim2.new(0, 15, 0, 15)			--Size in offset of the cursor
 
-local SENSITIVIY = 10								--How fast the cursor will move
+local SENSITIVITY = 10								--How fast the cursor will move
+local SCROLL_SPEED = 1024							--How fast ScrollingFrames will scroll
 local THUMBSTICK_DEADZONE = 0.5						--To prevent unnessesary moves caused by loose thumbstick.
 local THUMBSTICK_KEY = Enum.KeyCode.Thumbstick1		--Enum of thumbstick that will be polled
 local ACTIVATION_KEY = Enum.KeyCode.ButtonSelect	--Enum of button that will activate and deactivate cursor
@@ -49,6 +50,13 @@ local VALID_SELECTION_TYPES = {
     ["ImageButton"] = true,
     ["TextBox"] = true,
     ["ScrollingFrame"] = true
+}
+
+--Vectors used to manage scrolling with the right stick
+local GUI_VECTORS = {
+	[Enum.ScrollingDirection.XY] = Vector2.new(1,1),
+	[Enum.ScrollingDirection.X] = Vector2.new(1,0),
+	[Enum.ScrollingDirection.Y] = Vector2.new(0,1),
 }
 
 --//	CONFIG END	\\--
@@ -131,18 +139,18 @@ self.Events.GuiObjectSelectionEnded = Instance.new("BindableEvent")
 
 
 --//Updates the position of the Cursor
-local function UpdateCursorPosition()
+local function UpdateCursorPosition(dt)
 	local leftThumbstick = states[THUMBSTICK_KEY]
 		
     --Update move direction by polling position
     if (leftThumbstick.Position.Magnitude > THUMBSTICK_DEADZONE) then
-        currentMoveDirection = (Vector2.new(leftThumbstick.Position.X, -leftThumbstick.Position.Y) * SENSITIVIY) / CursorGui.AbsoluteSize
+        currentMoveDirection = (Vector2.new(leftThumbstick.Position.X, -leftThumbstick.Position.Y) * SENSITIVITY) / CursorGui.AbsoluteSize
     else
         currentMoveDirection = Vector2.new(0, 0)
     end
 
     --Construct a new UDim2 position
-    currentPosition = currentPosition + UDim2.new(currentMoveDirection.X, 0, currentMoveDirection.Y, 0)
+    currentPosition = currentPosition + UDim2.new(currentMoveDirection.X*(dt*60), 0, currentMoveDirection.Y*(dt*60), 0)
 
     --Constrain with screen bounds
     currentPosition = UDim2.new(math.clamp(currentPosition.X.Scale, 0, 1), 0, math.clamp(currentPosition.Y.Scale, 0, 1), 0)
@@ -170,6 +178,20 @@ local function UpdateCursorPosition()
 		if (GuiService.SelectedObject) then
 			if (GuiService.SelectedObject ~= topUiObject) then
 				self.Events.GuiObjectSelectionEnded:Fire(GuiService.SelectedObject)		
+			else
+				--Detect if UI object is child of a ScrollingFrame, if so, react to right thumbstick movement
+				local frame = GuiService.SelectedObject:FindFirstAncestorWhichIsA("ScrollingFrame")
+				if frame then
+					local rightThumbstick = states[Enum.KeyCode.Thumbstick2]
+					
+					if (rightThumbstick.Position.Magnitude > THUMBSTICK_DEADZONE) then
+				        currentMoveDirection = (Vector2.new(rightThumbstick.Position.X, -rightThumbstick.Position.Y) * SENSITIVITY) / CursorGui.AbsoluteSize
+				    else
+						currentMoveDirection = Vector2.new(0, 0)
+					end
+					
+					frame.CanvasPosition = frame.CanvasPosition+(((currentMoveDirection*(dt*60))*SCROLL_SPEED)*GUI_VECTORS[frame.ScrollingDirection])
+				end
 			end
 		else
 			self.Events.GuiObjectSelectionStarted:Fire(topUiObject)
